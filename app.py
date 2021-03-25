@@ -19,9 +19,9 @@ print(f'Session cookie secured: {app.config["SESSION_COOKIE_SECURE"]}')
 
 
 
-app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
-app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png', '.gif']
-app.config['UPLOAD_PATH'] = app.config["IMAGE_UPLOADS"]
+app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024
+app.config['IMAGE_UPLOADS_PATH'] = app.config["IMAGE_UPLOADS"]
+app.config['MEDIA_UPLOADS_PATH'] = app.config["MEDIA_UPLOADS"]
 
 @app.errorhandler(413)
 def too_large(e):
@@ -29,23 +29,46 @@ def too_large(e):
 
 @app.route('/')
 def index():
-    files = os.listdir(app.config['UPLOAD_PATH'])
+    files = os.listdir('./upload')
     return render_template('index.html', files=files)
 
-@app.route('/', methods=['POST'])
+@app.route('/submit', methods=['POST'])
 def upload_files():
     uploaded_file = request.files['file']
     filename = secure_filename(uploaded_file.filename)
     if filename != '':
         file_ext = os.path.splitext(filename)[1]
-        if file_ext not in app.config['UPLOAD_EXTENSIONS']:
+        if file_ext not in app.config['UPLOAD_EXTENSIONS_IMAGES']:
             return "Invalid image", 400
-        uploaded_file.save(os.path.join(app.config['UPLOAD_PATH'], filename))
+        filepath = os.path.join(app.config['IMAGE_UPLOADS_PATH'], filename)
+        if os.path.exists(filepath):
+            return "Image exists", 400
+        uploaded_file.save(filepath)
     return '', 204
 
-@app.route('/uploads/<filename>')
-def upload(filename):
-    return send_from_directory(app.config['UPLOAD_PATH'], filename)
+
+@app.route('/submit-media', methods=['POST'])
+def upload_media_files():
+    uploaded_file = request.files['file']
+    filename = secure_filename(uploaded_file.filename)
+    if filename != '':
+        file_ext = os.path.splitext(filename)[1]
+        if file_ext not in app.config['UPLOAD_EXTENSIONS_MEDIA']:
+            return "Invalid file format", 400
+        filepath = os.path.join(app.config['MEDIA_UPLOADS_PATH'], filename)
+        if os.path.exists(filepath):
+            return "File exists", 400
+        uploaded_file.save(filepath)
+    return '', 204
+
+@app.route('/uploads/images/<filename>')
+def view_image_upload(filename):
+    return send_from_directory(app.config['IMAGE_UPLOADS_PATH'], filename)
+
+
+@app.route('/uploads/media/<filename>')
+def view_media_upload(filename):
+    return send_from_directory(app.config['MEDIA_UPLOADS_PATH'], filename)
 
 if __name__ == "__main__":
     app.run(debug=True, port=8080)
