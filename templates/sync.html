@@ -7,7 +7,7 @@
     <div>
       <h1>Available buckets</h1>
       <ul class="container">{% for bucket in buckets %}
-        <li class="row">{{bucket['Name']|safe}}</li>
+        <li class="row">{{bucket|safe}}</li>
         {% endfor %}
         </ul>
     </div>
