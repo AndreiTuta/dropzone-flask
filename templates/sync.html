@@ -1,0 +1,16 @@
+<html>
+  <head>
+    <title>File Upload - Buckets</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/min/dropzone.min.css">
+  </head>
+  <body>
+    <div>
+      <h1>Available buckets</h1>
+      {% for bucket in buckets %}
+      {{bucket|safe}}
+      {% endfor %}
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/min/dropzone.min.js"></script>
+  </body>
+</html>

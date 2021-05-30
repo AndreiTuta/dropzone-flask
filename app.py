@@ -4,6 +4,8 @@ from flask import Flask, render_template, request, redirect, url_for, abort, \
 from werkzeug.utils import secure_filename
 ### Utils ###
 import configparser
+### Boto for s3 ###
+import boto3
 
 app = Flask(__name__)
 
@@ -65,6 +67,21 @@ def upload_media_files():
 def view_image_upload(filename):
     return send_from_directory(app.config['IMAGE_UPLOADS_PATH'], filename)
 
+
+@app.route('/sync')
+def sync_uploads():
+    # Creating the low level functional client
+    client = boto3.client(
+        's3',   
+        aws_access_key_id = app.config["AWSID"],
+        aws_secret_access_key = app.config["AWSSEC"],
+        region_name = app.config["REGION"]
+    )
+
+    # Fetch the list of existing buckets
+    clientResponse = client.list_buckets()
+    
+    return render_template('sync.html', buckets=clientResponse['Buckets'])
 
 @app.route('/uploads/media/<filename>')
 def view_media_upload(filename):
