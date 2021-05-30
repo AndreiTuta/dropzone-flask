@@ -10,6 +10,9 @@ class Config(object):
     MEDIA_UPLOADS = "./upload/media"
     UPLOAD_EXTENSIONS_MEDIA = ['.webm']
 
+    AWSID = "aws_access_id"
+    AWSSEC = "aws_access_secret"
+    REGION = "region"
 
 class ProductionConfig(Config):
     pass
