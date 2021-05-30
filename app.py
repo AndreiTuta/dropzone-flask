@@ -24,6 +24,17 @@ print(f'Session cookie secured: {app.config["SESSION_COOKIE_SECURE"]}')
 app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024
 app.config['IMAGE_UPLOADS_PATH'] = app.config["IMAGE_UPLOADS"]
 app.config['MEDIA_UPLOADS_PATH'] = app.config["MEDIA_UPLOADS"]
+# Creating the low level functional client
+client = boto3.client(
+    's3',   
+    aws_access_key_id = app.config["AWSID"],
+    aws_secret_access_key = app.config["AWSSEC"],
+    region_name = app.config["REGION"]
+)
+
+s3_resource = boto3.resource('s3',aws_access_key_id = app.config["AWSID"],
+    aws_secret_access_key = app.config["AWSSEC"],
+    region_name = app.config["REGION"])
 
 @app.errorhandler(413)
 def too_large(e):
@@ -67,21 +78,52 @@ def upload_media_files():
 def view_image_upload(filename):
     return send_from_directory(app.config['IMAGE_UPLOADS_PATH'], filename)
 
+@app.route('/s3/uploads/images/<filename>')
+def s3_upload(filename):
+    local_file = app.config['IMAGE_UPLOADS_PATH']+"/" + filename
+    remote_file = filename
 
-@app.route('/sync')
-def sync_uploads():
-    # Creating the low level functional client
-    client = boto3.client(
-        's3',   
-        aws_access_key_id = app.config["AWSID"],
-        aws_secret_access_key = app.config["AWSSEC"],
-        region_name = app.config["REGION"]
-    )
+    client.upload_file(local_file, 'welcometogate', remote_file)
+    return send_from_directory(app.config['IMAGE_UPLOADS_PATH'], filename)
 
+
+
+@app.route('/buckets')
+def fetch_buckets():
     # Fetch the list of existing buckets
     clientResponse = client.list_buckets()
     
     return render_template('sync.html', buckets=clientResponse['Buckets'])
+
+
+
+@app.route('/buckets/<bucket_name>')
+def fetch_bucket_objects(bucket_name):
+    my_bucket = s3_resource.Bucket(bucket_name)
+    objects = my_bucket.objects.filter(Prefix='')
+    object_json = {}
+    for obj in objects:
+        path, filename = os.path.split(obj.key)
+        my_bucket.download_file(obj.key, 'download/'+filename)
+        object_json[obj.key] = 'download/'+filename
+
+    return object_json, 200
+
+
+@app.route('/buckets/<bucket_name>/<object_name>')
+def fetch_bucket_object(bucket_name, object_name):
+    my_bucket = s3_resource.Bucket(bucket_name)
+    objects = my_bucket.objects.filter(Prefix='')
+    object_json = {}
+    for obj in objects:
+        path, filename = os.path.split(obj.key)
+        my_bucket.download_file(obj.key, 'download/'+filename)
+        object_json[obj.key] = 'download/'+filename
+
+    return object_json, 200
+
+
+
 
 @app.route('/uploads/media/<filename>')
 def view_media_upload(filename):

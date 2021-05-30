@@ -6,9 +6,10 @@
   <body>
     <div>
       <h1>Available buckets</h1>
-      {% for bucket in buckets %}
-      {{bucket|safe}}
-      {% endfor %}
+      <ul class="container">{% for bucket in buckets %}
+        <li class="row">{{bucket['Name']|safe}}</li>
+        {% endfor %}
+        </ul>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/min/dropzone.min.js"></script>
