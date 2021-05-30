@@ -78,12 +78,12 @@ def upload_media_files():
 def view_image_upload(filename):
     return send_from_directory(app.config['IMAGE_UPLOADS_PATH'], filename)
 
-@app.route('/s3/uploads/images/<filename>')
-def s3_upload(filename):
+@app.route('/s3/<bucket_name>/uploads/images/<filename>')
+def s3_upload(bucket_name, filename):
     local_file = app.config['IMAGE_UPLOADS_PATH']+"/" + filename
     remote_file = filename
 
-    client.upload_file(local_file, 'welcometogate', remote_file)
+    client.upload_file(local_file, bucket_name, remote_file)
     return send_from_directory(app.config['IMAGE_UPLOADS_PATH'], filename)
 
 
@@ -107,7 +107,7 @@ def fetch_bucket_objects(bucket_name):
         my_bucket.download_file(obj.key, 'download/'+filename)
         object_json[obj.key] = 'download/'+filename
 
-    return object_json, 200
+    return render_template('sync.html', buckets=object_json)
 
 
 @app.route('/buckets/<bucket_name>/<object_name>')
